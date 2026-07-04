@@ -2,7 +2,7 @@ name: Deploy static HTML to Pages
 
 on:
   push:
-    branches: [ develop ]   # develop ブランチに push したら実行
+    branches: [ develop ]
 
 permissions:
   contents: read
@@ -17,9 +17,9 @@ jobs:
         uses: actions/checkout@v6
 
       - name: Upload static site
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v4
         with:
-          path: ./docs   # ← 公開したいフォルダ（docs）
+          path: ./docs
 
       - name: Deploy to GitHub Pages
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
