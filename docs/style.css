@@ -26,3 +26,53 @@ tr:nth-child(odd) {
 table, th, td {
     border: none;
 }
+
+/* 買い目コンテナ全体のスタイル */
+.tickets-container {
+    margin-top: 30px;
+    padding: 16px;
+    background-color: #fafafa;
+    border-radius: 4px;
+}
+
+/* 「推奨買い目」のタイトル */
+.tickets-container h2 {
+    font-size: 18px;
+    color: #333;
+    margin-bottom: 12px;
+    border-bottom: 2px solid #444;
+    padding-bottom: 4px;
+}
+
+/* 券種ごとのブロック */
+.bet-group {
+    margin-bottom: 12px;
+}
+
+/* 券種名（単勝、馬連など） */
+.bet-group h3 {
+    font-size: 15px;
+    color: #555;
+    margin-bottom: 6px;
+}
+
+/* 買い目リストのスタイル */
+.bet-group ul {
+    list-style-type: none;
+    padding-left: 0;
+    margin: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px; /* 買い目が複数ある場合に程よく間隔を空ける */
+}
+
+/* 個別の買い目（バッジ風デザイン） */
+.bet-group li {
+    background-color: #ffffff;
+    border: 1px solid #ddd;
+    padding: 4px 12px;
+    border-radius: 4px;
+    font-size: 15px;
+    font-weight: bold;
+    color: #333;
+}
