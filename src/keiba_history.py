@@ -142,7 +142,9 @@ def _parse_snapshot(
 
 def load_history(
     repository_path: str | Path = ".",
-) -> tuple[pd.DataFrame, pd.DataFrame]:
+    *,
+    include_snapshot_metadata: bool = False,
+) -> tuple[pd.DataFrame, pd.DataFrame] | tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """Return horse-odds and ticket DataFrames from committed race pages.
 
     For a race present in multiple commits, the newest reachable snapshot wins.
@@ -154,6 +156,7 @@ def load_history(
 
     horse_rows: list[dict[str, object]] = []
     ticket_rows: list[dict[str, object]] = []
+    snapshot_rows: list[dict[str, object]] = []
     horse_columns: list[str] = []
     seen_blobs: set[pygit2.Oid] = set()
     seen_races: set[tuple[str, str, int]] = set()
@@ -197,6 +200,16 @@ def load_history(
             continue
         seen_races.add(race_key)
 
+        snapshot_time = commit_date
+        snapshot_rows.append(
+            {
+                "日付": first_horse["日付"],
+                "開催": str(first_horse["開催"]),
+                "R": int(first_horse["R"]),
+                "snapshot_time": snapshot_time,
+            }
+        )
+
         horse_rows.extend(current_horses)
         for column in current_columns:
             if column not in horse_columns:
@@ -222,6 +235,24 @@ def load_history(
             ticket_frame["レース番号"], errors="raise"
         ).astype("int64")
 
+    snapshot_frame = pd.DataFrame.from_records(
+        snapshot_rows,
+        columns=["日付", "開催", "R", "snapshot_time"],
+    )
+    if not snapshot_frame.empty:
+        snapshot_frame["日付"] = pd.to_datetime(
+            snapshot_frame["日付"], format="%Y-%m-%d"
+        )
+        snapshot_frame["R"] = pd.to_numeric(
+            snapshot_frame["R"], errors="raise"
+        ).astype("int64")
+        snapshot_frame["snapshot_time"] = pd.to_datetime(
+            snapshot_frame["snapshot_time"], utc=True
+        ).dt.tz_convert(None)
+        snapshot_frame = snapshot_frame.sort_values(
+            ["日付", "開催", "R"], kind="stable"
+        ).reset_index(drop=True)
+
     if not horse_frame.empty:
         horse_frame = horse_frame.sort_values(
             ["日付", "開催", "R", "馬番"], kind="stable"
@@ -230,4 +261,6 @@ def load_history(
         ticket_frame = ticket_frame.sort_values(
             ["日付", "競馬場名", "レース番号", "券種"], kind="stable"
         ).reset_index(drop=True)
+    if include_snapshot_metadata:
+        return horse_frame, ticket_frame, snapshot_frame
     return horse_frame, ticket_frame

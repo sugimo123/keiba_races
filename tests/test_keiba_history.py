@@ -142,6 +142,28 @@ def test_load_history_handles_race_without_ticket_section(tmp_path: Path) -> Non
     assert list(tickets.columns) == ["日付", "競馬場名", "レース番号", "券種", "買い目"]
 
 
+def test_load_history_returns_snapshot_metadata_when_requested(tmp_path: Path) -> None:
+    repository = pygit2.init_repository(str(tmp_path / "repo"), False)
+    add_snapshot(repository, race_html())
+
+    horses, tickets, metadata = load_history(
+        repository.workdir,
+        include_snapshot_metadata=True,
+    )
+
+    assert len(horses) == 1
+    assert tickets.shape[0] == 2
+    assert metadata.columns.tolist() == [
+        "日付",
+        "開催",
+        "R",
+        "snapshot_time",
+    ]
+    assert metadata.iloc[0]["開催"] == "京都"
+    assert metadata.iloc[0]["R"] == 12
+    assert pd.api.types.is_datetime64_any_dtype(metadata["snapshot_time"])
+
+
 def test_parse_snapshot_rejects_malformed_tickets() -> None:
     with pytest.raises(ValueError, match="Unexpected ticket format"):
         _parse_snapshot(race_html(tickets="<li>1 / 9</li>"))
